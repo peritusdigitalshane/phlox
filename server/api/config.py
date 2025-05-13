@@ -133,28 +133,7 @@ async def update_options(
         "message": f"Options for category '{category}' updated successfully"
     }
 
-@router.get("/ollama/models")
-async def get_models(
-    ollamaEndpoint: str = Query(..., description="The endpoint for Ollama")
-):
-    """Fetch model tags from the configured Ollama endpoint."""
-    try:
-        async with httpx.AsyncClient() as client:
-            url = f"{ollamaEndpoint}/api/tags"
-            print(url)
-            response = await client.get(url)
 
-            if response.status_code == 200:
-                return response.json()
-            else:
-                raise HTTPException(
-                    status_code=response.status_code,
-                    detail="Failed to fetch models",
-                )
-
-    except Exception as e:
-        logging.error(f"Error fetching models: {e}")
-        raise HTTPException(status_code=500, detail="Internal Server Error")
 
 @router.get("/whisper/models")
 async def get_whisper_models(
@@ -249,6 +228,7 @@ async def get_openai_models(
 ):
     """Fetch available models from the OpenAI API."""
     try:
+        logging.info(f"Fetching OpenAI models from endpoint: {openaiEndpoint}")
         async with httpx.AsyncClient() as client:
             url = f"{openaiEndpoint}/models"
             headers = {
@@ -260,12 +240,24 @@ async def get_openai_models(
 
             if response.status_code == 200:
                 data = response.json()
-                # Filter for chat models
-                chat_models = [model["id"] for model in data["data"]
-                              if "gpt" in model["id"] or "claude" in model["id"]]
-                # Add embedding models
-                embedding_models = [model["id"] for model in data["data"]
-                                  if "embedding" in model["id"]]
+                logging.info(f"OpenAI models response: {data}")
+
+                # Filter for chat models - include all GPT models and Claude models if available
+                chat_models = []
+                embedding_models = []
+
+                if "data" in data:
+                    for model in data["data"]:
+                        model_id = model.get("id", "")
+                        # Add chat models
+                        if any(x in model_id.lower() for x in ["gpt", "claude", "text-davinci"]):
+                            chat_models.append(model_id)
+                        # Add embedding models
+                        if "embedding" in model_id.lower() or "text-embedding" in model_id.lower():
+                            embedding_models.append(model_id)
+
+                logging.info(f"Filtered chat models: {chat_models}")
+                logging.info(f"Filtered embedding models: {embedding_models}")
 
                 return {
                     "models": {
@@ -274,9 +266,11 @@ async def get_openai_models(
                     }
                 }
             else:
+                error_msg = f"Failed to fetch models: {response.text}"
+                logging.error(error_msg)
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail=f"Failed to fetch models: {response.text}"
+                    detail=error_msg
                 )
     except Exception as e:
         logging.error(f"Error fetching OpenAI models: {e}")

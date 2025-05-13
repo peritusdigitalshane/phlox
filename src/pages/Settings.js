@@ -93,15 +93,26 @@ const Settings = () => {
                         configData.OPENAI_BASE_URL,
                         configData.OPENAI_API_KEY
                     );
-                    setOpenAIModelOptions(openaiModels.models);
 
-                    // If we have OpenAI models, add them to the model options
-                    if (openaiModels.models.chat && openaiModels.models.chat.length > 0) {
-                        setModelOptions(prev => {
-                            // Combine Ollama models with OpenAI models
-                            const combined = [...prev, ...openaiModels.models.chat];
-                            return combined;
-                        });
+                    console.log("OpenAI models response:", openaiModels);
+
+                    if (openaiModels && openaiModels.models) {
+                        setOpenAIModelOptions(openaiModels.models);
+
+                        // If we have OpenAI models, add them to the model options
+                        if (openaiModels.models.chat && openaiModels.models.chat.length > 0) {
+                            console.log("Adding OpenAI chat models to options:", openaiModels.models.chat);
+                            setModelOptions(prev => {
+                                // Combine Ollama models with OpenAI models
+                                const combined = [...prev, ...openaiModels.models.chat];
+                                console.log("Combined model options:", combined);
+                                return combined;
+                            });
+                        } else {
+                            console.warn("No OpenAI chat models found in response");
+                        }
+                    } else {
+                        console.warn("Invalid OpenAI models response format:", openaiModels);
                     }
                 } catch (error) {
                     console.error("Error fetching OpenAI models:", error);

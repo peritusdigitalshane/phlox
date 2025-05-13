@@ -47,11 +47,22 @@ export const settingsApi = {
 
     fetchOpenAIModels: (openaiBaseUrl, openaiApiKey) => {
         if (!openaiBaseUrl || !openaiApiKey) {
+            console.warn("Missing OpenAI base URL or API key");
             return Promise.resolve({ models: { chat: [], embedding: [] } });
         }
+
+        console.log("Fetching OpenAI models with base URL:", openaiBaseUrl);
         const apiUrl = `/api/config/openai/models?openaiEndpoint=${encodeURIComponent(openaiBaseUrl)}&openaiKey=${encodeURIComponent(openaiApiKey)}`;
+
         return handleApiRequest({
-            apiCall: () => fetch(apiUrl),
+            apiCall: () => {
+                console.log("Making API request to:", apiUrl);
+                return fetch(apiUrl)
+                    .then(response => {
+                        console.log("OpenAI models API response status:", response.status);
+                        return response;
+                    });
+            },
             errorMessage: "Failed to fetch OpenAI models",
         });
     },
