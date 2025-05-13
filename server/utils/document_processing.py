@@ -1,10 +1,10 @@
 import aiohttp
 import asyncio
 import logging
-from ollama import AsyncClient as AsyncOllamaClient
 from server.database.config import config_manager
 from server.utils.helpers import calculate_age, refine_field_content
 from server.schemas.templates import TemplateResponse
+from server.utils.client_factory import get_async_client
 import fitz  # PyMuPDF for PDF processing
 import io
 import pytesseract
@@ -66,7 +66,7 @@ async def process_document_content(
         Returns:
             Extracted and formatted content for the section
         """
-        client = AsyncOllamaClient(host=config["OLLAMA_BASE_URL"])
+        client = get_async_client(config)
         messages = [
             {"role": "system", "content": system_prompt},
             {
@@ -280,7 +280,7 @@ async def process_document_field(
     """
     try:
         config = config_manager.get_config()
-        client = AsyncOllamaClient(host=config["OLLAMA_BASE_URL"])
+        client = get_async_client(config)
         options = config_manager.get_prompts_and_options()["options"]["general"].copy()
 
         # Use FieldResponse for structured output

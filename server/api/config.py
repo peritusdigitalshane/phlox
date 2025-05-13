@@ -242,12 +242,53 @@ async def get_version():
         logging.error(f"Error getting version from CHANGELOG.md: {str(e)}")
         return {"version": "unknown"}
 
+@router.get("/openai/models")
+async def get_openai_models(
+    openaiEndpoint: str = Query(..., description="The endpoint for OpenAI API"),
+    openaiKey: str = Query(..., description="The API key for OpenAI")
+):
+    """Fetch available models from the OpenAI API."""
+    try:
+        async with httpx.AsyncClient() as client:
+            url = f"{openaiEndpoint}/models"
+            headers = {
+                "Authorization": f"Bearer {openaiKey}",
+                "Content-Type": "application/json"
+            }
+
+            response = await client.get(url, headers=headers)
+
+            if response.status_code == 200:
+                data = response.json()
+                # Filter for chat models
+                chat_models = [model["id"] for model in data["data"]
+                              if "gpt" in model["id"] or "claude" in model["id"]]
+                # Add embedding models
+                embedding_models = [model["id"] for model in data["data"]
+                                  if "embedding" in model["id"]]
+
+                return {
+                    "models": {
+                        "chat": chat_models,
+                        "embedding": embedding_models
+                    }
+                }
+            else:
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=f"Failed to fetch models: {response.text}"
+                )
+    except Exception as e:
+        logging.error(f"Error fetching OpenAI models: {e}")
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
+
 @router.get("/status")
 async def get_server_status():
-    """Check the status of Ollama and Whisper servers."""
+    """Check the status of Ollama, OpenAI and Whisper servers."""
     config = config_manager.get_config()
     status = {
         "ollama": False,
+        "openai": False,
         "whisper": False
     }
 
@@ -258,6 +299,23 @@ async def get_server_status():
                 try:
                     response = await client.get(f"{config.get('OLLAMA_BASE_URL')}/api/tags", timeout=2.0)
                     status["ollama"] = response.status_code == 200
+                except:
+                    pass
+
+        # Check OpenAI
+        if config.get("OPENAI_API_KEY") and config["OPENAI_API_KEY"] != "&nbsp;":
+            async with httpx.AsyncClient() as client:
+                try:
+                    headers = {
+                        "Authorization": f"Bearer {config['OPENAI_API_KEY']}",
+                        "Content-Type": "application/json"
+                    }
+                    response = await client.get(
+                        f"{config.get('OPENAI_BASE_URL', 'https://api.openai.com/v1')}/models",
+                        headers=headers,
+                        timeout=2.0
+                    )
+                    status["openai"] = response.status_code == 200
                 except:
                     pass
 

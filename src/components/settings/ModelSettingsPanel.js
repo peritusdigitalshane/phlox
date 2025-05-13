@@ -28,7 +28,7 @@ const ModelSettingsPanel = ({
     modelOptions,
     whisperModelOptions = [],
     whisperModelListAvailable = false,
-    urlStatus = { whisper: false, ollama: false },
+    urlStatus = { whisper: false, ollama: false, openai: false },
 }) => {
     return (
         <Box className="panels-bg" p="4" borderRadius="sm">
@@ -162,6 +162,55 @@ const ModelSettingsPanel = ({
                                 className="input-style"
                             />
                             {urlStatus.ollama && (
+                                <InputRightElement>
+                                    <Tooltip label="Connection successful">
+                                        <CheckCircleIcon color="green.500" />
+                                    </Tooltip>
+                                </InputRightElement>
+                            )}
+                        </InputGroup>
+                    </Box>
+
+                    <Box>
+                        <Tooltip label="API key for the OpenAI service">
+                            <Text fontSize="sm" mt="2">
+                                OpenAI API Key
+                            </Text>
+                        </Tooltip>
+                        <Input
+                            size="sm"
+                            type="password"
+                            value={config?.OPENAI_API_KEY || ""}
+                            onChange={(e) =>
+                                handleConfigChange(
+                                    "OPENAI_API_KEY",
+                                    e.target.value,
+                                )
+                            }
+                            className="input-style"
+                        />
+                    </Box>
+
+                    <Box>
+                        <Tooltip label="Base URL for the OpenAI API (optional)">
+                            <Text fontSize="sm" mt="2">
+                                OpenAI Base URL
+                            </Text>
+                        </Tooltip>
+                        <InputGroup size="sm">
+                            <Input
+                                size="sm"
+                                value={config?.OPENAI_BASE_URL || "https://api.openai.com/v1"}
+                                onChange={(e) =>
+                                    handleConfigChange(
+                                        "OPENAI_BASE_URL",
+                                        e.target.value,
+                                    )
+                                }
+                                className="input-style"
+                                placeholder="https://api.openai.com/v1"
+                            />
+                            {urlStatus.openai && (
                                 <InputRightElement>
                                     <Tooltip label="Connection successful">
                                         <CheckCircleIcon color="green.500" />

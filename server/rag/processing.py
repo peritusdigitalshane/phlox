@@ -3,8 +3,8 @@ from .semantic_chunker import ClusterSemanticChunker
 import chromadb
 from chromadb.config import Settings
 import os
-from ollama import Client as ollamaClient
 from server.database.config import config_manager
+from server.utils.client_factory import get_client
 from server.schemas.grammars import ClinicalSuggestionList
 
 # Initialize ConfigManager
@@ -213,8 +213,8 @@ def generate_specialty_suggestions():
         config = config_manager.get_config()
         prompts = config_manager.get_prompts_and_options()
 
-        # Initialize Ollama client
-        client = ollamaClient(host=config["OLLAMA_BASE_URL"])
+        # Initialize LLM client
+        client = get_client(config)
 
         suggestion_prompt = f"""As an expert in {specialty}, generate 3 brief, focused clinical questions that are 4-5 words long.
 

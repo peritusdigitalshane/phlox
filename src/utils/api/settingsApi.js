@@ -45,6 +45,17 @@ export const settingsApi = {
         });
     },
 
+    fetchOpenAIModels: (openaiBaseUrl, openaiApiKey) => {
+        if (!openaiBaseUrl || !openaiApiKey) {
+            return Promise.resolve({ models: { chat: [], embedding: [] } });
+        }
+        const apiUrl = `/api/config/openai/models?openaiEndpoint=${encodeURIComponent(openaiBaseUrl)}&openaiKey=${encodeURIComponent(openaiApiKey)}`;
+        return handleApiRequest({
+            apiCall: () => fetch(apiUrl),
+            errorMessage: "Failed to fetch OpenAI models",
+        });
+    },
+
     savePrompts: (prompts) =>
         handleApiRequest({
             apiCall: () =>

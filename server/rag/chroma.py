@@ -2,10 +2,9 @@ import fitz  # PyMuPDF
 from .semantic_chunker import ClusterSemanticChunker
 import chromadb
 from chromadb.config import Settings
-from chromadb.utils.embedding_functions import OllamaEmbeddingFunction
 import re
-from ollama import Client as ollamaClient
 from server.database.config import config_manager
+from server.utils.client_factory import get_client, get_embedding_function
 
 prompts = config_manager.get_prompts_and_options()
 
@@ -21,11 +20,8 @@ class ChromaManager:
         """
         self.config = config_manager.get_config()
         self.prompts = config_manager.get_prompts_and_options()
-        self.embedding_model = OllamaEmbeddingFunction(
-            url=f"{self.config['OLLAMA_BASE_URL']}/api/embeddings",
-            model_name=self.config["EMBEDDING_MODEL"],
-        )
-        self.ollama_client = ollamaClient(host=self.config["OLLAMA_BASE_URL"])
+        self.embedding_model = get_embedding_function(self.config)
+        self.ollama_client = get_client(self.config)
         self.chroma_client = chromadb.PersistentClient(
             path="/usr/src/app/data/chroma",
             settings=Settings(anonymized_telemetry=False, allow_reset=True),

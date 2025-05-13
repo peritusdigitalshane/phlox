@@ -7,8 +7,8 @@ from server.database.connection import PatientDatabase
 from server.database.defaults.templates import DefaultTemplates
 from server.schemas.templates import FormatStyle, ClinicalTemplate, TemplateField, ExtractedTemplate
 from server.database.config import config_manager
+from server.utils.client_factory import get_async_client
 import time
-from ollama import AsyncClient as AsyncOllamaClient
 
 # Initialize database connection
 db = PatientDatabase()
@@ -505,7 +505,7 @@ async def generate_template_from_note(example_note: str) -> ClinicalTemplate:
     """
     try:
         config = config_manager.get_config()
-        client = AsyncOllamaClient(host=config["OLLAMA_BASE_URL"])
+        client = get_async_client(config)
 
         system_prompt = """
         You are a medical documentation expert that analyzes clinical notes and creates structured templates.

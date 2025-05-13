@@ -27,6 +27,7 @@ const RagSettingsPanel = ({
     modelOptions,
     handleClearDatabase,
     handleConfigChange,
+    openaiModelOptions,
 }) => {
     const [isEmbeddingModelModalOpen, setIsEmbeddingModelModalOpen] =
         useState(false);
@@ -96,7 +97,15 @@ const RagSettingsPanel = ({
                                 placeholder="Select embedding model"
                                 className="input-style"
                             >
+                                {/* Ollama models */}
                                 {modelOptions.map((model) => (
+                                    <option key={model} value={model}>
+                                        {model}
+                                    </option>
+                                ))}
+
+                                {/* OpenAI embedding models */}
+                                {openaiModelOptions && openaiModelOptions.embedding && openaiModelOptions.embedding.map((model) => (
                                     <option key={model} value={model}>
                                         {model}
                                     </option>

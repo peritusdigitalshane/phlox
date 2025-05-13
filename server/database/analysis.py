@@ -1,11 +1,11 @@
 import json
 import logging
 from datetime import datetime, timedelta
-from ollama import AsyncClient as AsyncOllamaClient
 from server.database.connection import PatientDatabase
 from server.database.patient import get_patients_by_date
 from server.utils.helpers import run_clinical_reasoning
 from server.database.config import config_manager
+from server.utils.client_factory import get_async_client
 import random
 import asyncio
 
@@ -15,11 +15,11 @@ logger = logging.getLogger(__name__)
 
 async def _generate_analysis_with_llm(patient_data):
     """
-    Generate analysis using Ollama LLM.
+    Generate analysis using LLM.
     """
     config = config_manager.get_config()
-    client = AsyncOllamaClient(host=config["OLLAMA_BASE_URL"])
-    ollama_model = config["PRIMARY_MODEL"]
+    client = get_async_client(config)
+    model = config["PRIMARY_MODEL"]
     options = config_manager.get_prompts_and_options()["options"]["general"]
 
     today = datetime.now().strftime("%Y-%m-%d")
@@ -55,7 +55,7 @@ async def _generate_analysis_with_llm(patient_data):
 
     try:
         response = await client.chat(
-            model=ollama_model, messages=request_body, options=options
+            model=model, messages=request_body, options=options
         )
         cleaned_response = response["message"]["content"].strip()
 
@@ -183,8 +183,8 @@ async def generate_previous_visit_summary(patient_data):
     Generate a summary of patient's previous visit using LLM.
     """
     config = config_manager.get_config()
-    client = AsyncOllamaClient(host=config["OLLAMA_BASE_URL"])
-    ollama_model = config["SECONDARY_MODEL"]
+    client = get_async_client(config)
+    model = config["SECONDARY_MODEL"]
     options = config_manager.get_prompts_and_options()["options"]["secondary"]
 
     # Calculate time since last visit
@@ -250,7 +250,7 @@ async def generate_previous_visit_summary(patient_data):
 
     try:
         response = await client.chat(
-            model=ollama_model,
+            model=model,
             messages=request_body,
             options=options,
         )

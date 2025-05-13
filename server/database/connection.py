@@ -402,6 +402,8 @@ class PatientDatabase:
             "WHISPER_MODEL": "&nbsp;",
             "WHISPER_KEY": "&nbsp;",
             "OLLAMA_BASE_URL": "&nbsp;",
+            "OPENAI_API_KEY": "&nbsp;",
+            "OPENAI_BASE_URL": "https://api.openai.com/v1",
             "PRIMARY_MODEL": "&nbsp;",
             "SECONDARY_MODEL": "&nbsp;",
             "EMBEDDING_MODEL": "&nbsp;",

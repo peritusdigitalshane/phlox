@@ -54,6 +54,16 @@ export const settingsService = {
         }
     },
 
+    fetchOpenAIModels: async (openaiBaseUrl, openaiApiKey) => {
+        try {
+            const response = await settingsApi.fetchOpenAIModels(openaiBaseUrl, openaiApiKey);
+            return response;
+        } catch (error) {
+            console.error("Error fetching OpenAI models:", error);
+            return { models: { chat: [], embedding: [] } };
+        }
+    },
+
     validateUrl: async (type, url) => {
         if (!url) {
             return false;

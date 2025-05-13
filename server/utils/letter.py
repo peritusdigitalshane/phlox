@@ -1,8 +1,8 @@
 import random
 import logging
 from fastapi import HTTPException
-from ollama import Client as ollamaClient
 from server.database.config import config_manager
+from server.utils.client_factory import get_client
 
 
 async def generate_letter_content(
@@ -12,10 +12,10 @@ async def generate_letter_content(
     additional_instruction: str | None = None,
     context: list | None = None
 ):
-    """Generates letter content using Ollama based on provided data and prompts."""
+    """Generates letter content using LLM based on provided data and prompts."""
     config = config_manager.get_config()
     prompts = config_manager.get_prompts_and_options()
-    client = ollamaClient(host=config["OLLAMA_BASE_URL"])
+    client = get_client(config)
 
     try:
         # Always start with system messages

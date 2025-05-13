@@ -37,6 +37,7 @@ const Settings = () => {
     const [config, setConfig] = useState(null);
     const [loading, setLoading] = useState(true);
     const [modelOptions, setModelOptions] = useState([]);
+    const [openaiModelOptions, setOpenAIModelOptions] = useState({ chat: [], embedding: [] });
     const [whisperModelOptions, setWhisperModelOptions] = useState([]);
     const [whisperModelListAvailable, setWhisperModelListAvailable] =
         useState(false);
@@ -45,6 +46,7 @@ const Settings = () => {
     const [urlStatus, setUrlStatus] = useState({
         whisper: false,
         ollama: false,
+        openai: false,
     });
     const [collapseStates, setCollapseStates] = useState({
         userSettings: false,
@@ -75,11 +77,35 @@ const Settings = () => {
                 default_template: defaultTemplate.template_key,
             }));
 
+            // Fetch Ollama models if configured
             if (configData?.OLLAMA_BASE_URL) {
                 await settingsService.fetchOllamaModels(
                     configData.OLLAMA_BASE_URL,
                     setModelOptions,
                 );
+            }
+
+            // Fetch OpenAI models if configured
+            if (configData?.OPENAI_API_KEY && configData?.OPENAI_API_KEY !== "&nbsp;" &&
+                configData?.OPENAI_BASE_URL) {
+                try {
+                    const openaiModels = await settingsService.fetchOpenAIModels(
+                        configData.OPENAI_BASE_URL,
+                        configData.OPENAI_API_KEY
+                    );
+                    setOpenAIModelOptions(openaiModels.models);
+
+                    // If we have OpenAI models, add them to the model options
+                    if (openaiModels.models.chat && openaiModels.models.chat.length > 0) {
+                        setModelOptions(prev => {
+                            // Combine Ollama models with OpenAI models
+                            const combined = [...prev, ...openaiModels.models.chat];
+                            return combined;
+                        });
+                    }
+                } catch (error) {
+                    console.error("Error fetching OpenAI models:", error);
+                }
             }
 
             if (configData?.WHISPER_BASE_URL) {
@@ -124,10 +150,24 @@ const Settings = () => {
                 );
                 setUrlStatus((prev) => ({ ...prev, ollama: ollamaValid }));
             }
+
+            // Check OpenAI connection
+            if (config?.OPENAI_API_KEY && config?.OPENAI_API_KEY !== "&nbsp;" &&
+                config?.OPENAI_BASE_URL) {
+                try {
+                    // Use our backend API to validate the OpenAI connection
+                    const apiUrl = `/api/config/openai/models?openaiEndpoint=${encodeURIComponent(config.OPENAI_BASE_URL)}&openaiKey=${encodeURIComponent(config.OPENAI_API_KEY)}`;
+                    const response = await fetch(apiUrl);
+                    setUrlStatus((prev) => ({ ...prev, openai: response.ok }));
+                } catch (error) {
+                    console.error("Error validating OpenAI connection:", error);
+                    setUrlStatus((prev) => ({ ...prev, openai: false }));
+                }
+            }
         };
 
         validateUrls();
-    }, [config?.WHISPER_BASE_URL, config?.OLLAMA_BASE_URL]);
+    }, [config?.WHISPER_BASE_URL, config?.OLLAMA_BASE_URL, config?.OPENAI_API_KEY, config?.OPENAI_BASE_URL]);
 
     useEffect(() => {
         const fetchLetterTemplates = async () => {
@@ -269,6 +309,7 @@ const Settings = () => {
                     setIsCollapsed={() => toggleCollapse("ragSettings")}
                     config={config}
                     modelOptions={modelOptions}
+                    openaiModelOptions={openaiModelOptions}
                     handleClearDatabase={handleClearDatabase}
                     handleConfigChange={handleConfigChange}
                 />

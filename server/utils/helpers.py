@@ -1,9 +1,9 @@
 # server/utils/helpers.py
 from datetime import datetime
-from ollama import AsyncClient as AsyncOllamaClient
 from server.schemas.patient import Patient, Condition
 from server.database.config import config_manager
 from server.schemas.grammars import ClinicalReasoning
+from server.utils.client_factory import get_async_client
 import logging
 import asyncio
 import re
@@ -34,7 +34,7 @@ async def summarize_encounter(patient: Patient) -> tuple[str, Optional[str]]:
     config = config_manager.get_config()
     prompts = config_manager.get_prompts_and_options()
 
-    client = AsyncOllamaClient(host=config["OLLAMA_BASE_URL"])
+    client = get_async_client(config)
 
     if not patient.dob or not patient.encounter_date:
         raise ValueError("DOB or Encounter Date is missing")
@@ -116,7 +116,7 @@ async def summarize_encounter(patient: Patient) -> tuple[str, Optional[str]]:
 async def run_clinical_reasoning(template_data: dict, dob: str, encounter_date: str, gender: str):
     config = config_manager.get_config()
     prompts = config_manager.get_prompts_and_options()
-    client = AsyncOllamaClient(host=config["OLLAMA_BASE_URL"])
+    client = get_async_client(config)
 
     age = calculate_age(dob, encounter_date)
     reasoning_options = prompts["options"].get("reasoning", {})
@@ -216,7 +216,7 @@ async def refine_field_content(
 
         # Get configuration and client
         config = config_manager.get_config()
-        client = AsyncOllamaClient(host=config["OLLAMA_BASE_URL"])
+        client = get_async_client(config)
         prompts = config_manager.get_prompts_and_options()
         options = prompts["options"]["general"]
 

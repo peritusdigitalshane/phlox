@@ -4,9 +4,9 @@ import time
 import re
 import logging
 from typing import Dict, List, Union
-from ollama import AsyncClient as AsyncOllamaClient
 from server.database.config import config_manager
 from server.utils.helpers import refine_field_content
+from server.utils.client_factory import get_async_client
 from server.schemas.templates import TemplateField, TemplateResponse
 from server.schemas.grammars import FieldResponse
 
@@ -177,7 +177,7 @@ async def process_template_field(
     """
     try:
         config = config_manager.get_config()
-        client = AsyncOllamaClient(host=config["OLLAMA_BASE_URL"])
+        client = get_async_client(config)
         options = config_manager.get_prompts_and_options()["options"]["general"]
 
         response_format = FieldResponse.model_json_schema()
